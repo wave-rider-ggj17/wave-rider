@@ -5,48 +5,59 @@
 
 var game = new Phaser.Game(1200, 800, Phaser.AUTO, '', {preload: preload, create: create, update: update});
 var sin;
-var p;
+var player;
 var bmd;
-
+var platforms;
 
 function preload() {
 
     // game.load.image('title', '/public/img/openingScreen.jpg');
     game.stage.backgroundColor = '#4f3178';
     game.load.image('player', '/public/img/circle.png');
+    game.load.image('sine', '/public/img/sine.png');
+
 }
 
 function create() {
 
-    // var titleScreen = game.add.sprite(game.world.centerX, game.world.centerY, 'title');
-    // titleScreen.anchor.setTo(0.5, 0.5);
-
+    // Physics
     game.physics.startSystem(Phaser.Physics.ARCADE);
+    game.physics.arcade.gravity.y = 300;
 
-    //  The frequency (4) = the number of waves
-    // http://phaser.io/docs/2.4.2/Phaser.Math.html#sinCosGenerator
-    var data = game.math.sinCosGenerator(1200, 100, null, 4);
+    //Platforms
+    platforms = game.add.group();
 
-    sin = data.sin;
+    //  We will enable physics for any object that is created in this group
+    platforms.enableBody = true;
 
-    //  Just so we can see the data
-    bmd = game.add.bitmapData(1200, 800);
-    bmd.addToWorld();
-    p = game.add.sprite(0, 400, 'player');
+    // Sin Wave creation
+    platforms.create(0, 400, 'sine');
+    platforms.create(1200 - 5, 400, 'sine');
+    platforms.setAll('body.allowGravity', false);
+    platforms.setAll('body.immovable', true);
+    platforms.setAll('body.velocity.x',-100);
+
+
+    // Ball
+    player = game.add.sprite(200, 0, 'player');
+    game.physics.arcade.enable(player);
+    player.body.collideWorldBounds = true;
+    player.body.bounce.y = 0.2;
+
 
 }
 
 function update() {
-    bmd.clear();
-
-    for (var i = 0; i < 1200; i++) {
-        bmd.circle(i, 400 + sin[i], 2, 2, '#000000');
-        if (i == 0){
-            p.y = sin[i]+300;
-            p.x = i+100;
-        }
-    }
-
-    Phaser.ArrayUtils.rotate(sin);
+    platforms.forEach(wrapPlatform, this);
+    game.physics.arcade.collide(player, platforms, null, null, this)
 
 }
+
+
+//FUNCTIONS
+wrapPlatform = function (platform) {
+    if (platform.body.velocity.x > 0 && platform.x >= -1200) {
+        platform.x = 1200-11;
+    }
+
+};
