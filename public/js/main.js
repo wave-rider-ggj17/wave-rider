@@ -21,6 +21,8 @@ function create() {
     // var titleScreen = game.add.sprite(game.world.centerX, game.world.centerY, 'title');
     // titleScreen.anchor.setTo(0.5, 0.5);
 
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
     //  The frequency (4) = the number of waves
     // http://phaser.io/docs/2.4.2/Phaser.Math.html#sinCosGenerator
     var data = game.math.sinCosGenerator(1200, 100, null, 4);
