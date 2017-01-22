@@ -4,60 +4,80 @@
 
 
 var game = new Phaser.Game(1200, 800, Phaser.AUTO, '', {preload: preload, create: create, update: update});
-var sin;
+
+// Constant
+const PI = Math.PI;
+const ROTATION_FACTOR = 0.0625;
+const TIME_ELAPSABLE = 75;
+
+// Variables
 var player;
-var bmd;
-var platforms;
+var weapon;
+var cursors;
+var fireButton;
+var leftRotate = 0;
+var rightRotate = 0;
+var target;
 
 function preload() {
-
-    // game.load.image('title', '/public/img/openingScreen.jpg');
     game.stage.backgroundColor = '#4f3178';
     game.load.image('player', '/public/img/circle.png');
-    game.load.image('sine', '/public/img/sine.png');
-
+    game.load.image('bullet', '/public/img/bullet.png');
+    game.load.image('target', '/public/img/square.png');
 }
 
 function create() {
+    // Sprite
+    player = game.add.sprite(game.width / 2, 800, 'player');
+    player.anchor.set(0.5);
 
-    // Physics
-    game.physics.startSystem(Phaser.Physics.ARCADE);
-    game.physics.arcade.gravity.y = 300;
+    target = game.add.sprite(game.width / 2, 50, 'target');
+    target.anchor.set(0.5);
 
-    //Platforms
-    platforms = game.add.group();
+    // Weapon
+    weapon = game.add.weapon(100, 'bullet');
+    weapon.bulletSpeed = 400;
+    weapon.fireAngle = 30;
+    weapon.trackSprite(player, 0, 0, true);
 
-    //  We will enable physics for any object that is created in this group
-    platforms.enableBody = true;
-
-    // Sin Wave creation
-    platforms.create(0, 400, 'sine');
-    platforms.create(1200 - 5, 400, 'sine');
-    platforms.setAll('body.allowGravity', false);
-    platforms.setAll('body.immovable', true);
-    platforms.setAll('body.velocity.x',-100);
-
-
-    // Ball
-    player = game.add.sprite(200, 0, 'player');
-    game.physics.arcade.enable(player);
-    player.body.collideWorldBounds = true;
-    player.body.bounce.y = 0.2;
-
-
+    // Input
+    cursors = game.input.keyboard.createCursorKeys();
+    fireButton = this.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
 }
 
 function update() {
-    platforms.forEach(wrapPlatform, this);
-    game.physics.arcade.collide(player, platforms, null, null, this)
 
+    // Left Rotation
+    if (cursors.left.isDown && game.time.time > leftRotate) {
+        if ((Math.abs(player.rotation) + ROTATION_FACTOR) < PI) { // limit movement to 180
+            player.rotation -= ROTATION_FACTOR;
+            player.angle -= ROTATION_FACTOR;
+        } else {
+            player.rotation = PI;
+            player.angle = 180;
+        }
+        leftRotate = game.time.time + TIME_ELAPSABLE;
+
+    // Right Rotation
+    } else if (cursors.right.isDown && game.time.time > rightRotate) {
+        if ((Math.abs(player.rotation) - ROTATION_FACTOR) > 0) { // limit movement to 180
+            player.rotation += ROTATION_FACTOR;
+            player.angle += ROTATION_FACTOR;
+        } else {
+            player.rotation = 0;
+            player.angle = 0;
+        }
+        rightRotate = game.time.time + TIME_ELAPSABLE;
+    }else if (cursors.up.isDown){
+        player.rotation = 3*PI/2;
+        player.angle = 270;
+    }
+
+
+    if (fireButton.isDown) {
+        weapon.fire();
+    }
 }
 
 
 //FUNCTIONS
-wrapPlatform = function (platform) {
-    if (platform.body.velocity.x > 0 && platform.x >= -1200) {
-        platform.x = 1200-11;
-    }
-
-};
